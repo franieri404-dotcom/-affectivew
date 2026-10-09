@@ -86,6 +86,7 @@ export const commandAliases = {
     'jointocreate': 'jointocreate',
     'np': 'nowplaying',
     'now': 'nowplaying',
+
     // New commands + short aliases
     'snap': 'snap',
     'snap2': 'snap2',
@@ -98,6 +99,7 @@ export const commandAliases = {
     'van': 'vanish',
     'uvan': 'unvanish',
 };
+
 export const subcommandAliases = {
     'l': 'list',
     'ls': 'list',
@@ -119,6 +121,7 @@ export const subcommandAliases = {
     'remove': 'remove',
     'list': 'list',
 };
+
 /**
  * Resolve a command alias to its full command name
  * @param {string} commandName - The command name (could be an alias)
@@ -128,6 +131,7 @@ export function resolveCommandAlias(commandName) {
     const normalized = commandName.toLowerCase();
     return commandAliases[normalized] || commandName;
 }
+
 /**
  * Resolve a subcommand alias to its full subcommand name
  * @param {string} subcommandName - The subcommand name (could be an alias)
@@ -136,17 +140,4 @@ export function resolveCommandAlias(commandName) {
 export function resolveSubcommandAlias(subcommandName) {
     const normalized = subcommandName.toLowerCase();
     return subcommandAliases[normalized] || subcommandName;
-}
-// Check if the user is whitelisted
-const isWhitelisted = await ModerationService.isWhitelisted({
-    guild: interaction.guild,
-    user: interaction.user,
-});
-
-if (!isWhitelisted) {
-    throw new TitanBotError(
-        'Not whitelisted',
-        ErrorTypes.PERMISSION,
-        'You must be whitelisted to use this command.',
-    );
 }

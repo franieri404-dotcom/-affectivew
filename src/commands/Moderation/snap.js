@@ -20,6 +20,19 @@ export default {
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
     category: "moderation",
     async execute(interaction, config, client) {
+        // Must be whitelisted
+        const isWhitelisted = await ModerationService.isWhitelisted({
+            guild: interaction.guild,
+            user: interaction.user,
+        });
+        if (!isWhitelisted) {
+            throw new TitanBotError(
+                'Not whitelisted',
+                ErrorTypes.PERMISSION,
+                'You must be whitelisted to use this command.',
+            );
+        }
+
         const user = interaction.options.getUser("target");
         const reason = interaction.options.getString("reason") || "No reason provided";
 

@@ -444,3 +444,200 @@ export class ModerationService {
     }
   }
 }
+  // ==================== WHITELIST ====================
+  static async isWhitelisted({ guild, user }) {
+    // TODO: Replace this with your real whitelist check (database, role, etc.)
+    // For now it always returns true so the commands work while testing.
+    // Example with a role:
+    // const member = await guild.members.fetch(user.id).catch(() => null);
+    // return member?.roles.cache.has('YOUR_WHITELIST_ROLE_ID');
+    return true;
+  }
+
+  static async whitelistUser({ guild, user, moderator, reason = 'No reason provided' }) {
+    try {
+      // TODO: Add the real logic to save the user to your whitelist (database)
+      const caseId = await logModerationAction({
+        client: guild.client,
+        guild,
+        event: {
+          action: 'User Whitelisted',
+          target: `${user.tag} (${user.id})`,
+          executor: `${moderator.user.tag} (${moderator.id})`,
+          reason,
+          metadata: {
+            userId: user.id,
+            moderatorId: moderator.id
+          }
+        }
+      });
+
+      logger.info(`User whitelisted: ${user.tag} by ${moderator.user.tag} in ${guild.name}`);
+      return { caseId, user: user.tag, reason };
+    } catch (error) {
+      logger.error('Error whitelisting user:', error);
+      throw error;
+    }
+  }
+
+  // ==================== SNAP ====================
+  static async snapUser({ guild, user, moderator, reason = 'No reason provided' }) {
+    try {
+      let targetMember = await guild.members.fetch(user.id).catch(() => null);
+      if (targetMember) {
+        this.assertModerationHierarchy(moderator, targetMember, 'snap');
+      }
+
+      // TODO: Put the real "snap" action here (ban, kick, timeout, role remove, etc.)
+      // For now it only logs the action
+
+      const caseId = await logModerationAction({
+        client: guild.client,
+        guild,
+        event: {
+          action: 'Member Snapped',
+          target: `${user.tag} (${user.id})`,
+          executor: `${moderator.user.tag} (${moderator.id})`,
+          reason,
+          metadata: { userId: user.id, moderatorId: moderator.id }
+        }
+      });
+
+      logger.info(`User snapped: ${user.tag} by ${moderator.user.tag}`);
+      return { caseId, user: user.tag, reason };
+    } catch (error) {
+      logger.error('Error snapping user:', error);
+      throw error;
+    }
+  }
+
+  static async snap2User({ guild, user, moderator, reason = 'No reason provided' }) {
+    try {
+      let targetMember = await guild.members.fetch(user.id).catch(() => null);
+      if (targetMember) {
+        this.assertModerationHierarchy(moderator, targetMember, 'snap');
+      }
+
+      // TODO: Put the real "snap2" action here
+
+      const caseId = await logModerationAction({
+        client: guild.client,
+        guild,
+        event: {
+          action: 'Member Snapped (2)',
+          target: `${user.tag} (${user.id})`,
+          executor: `${moderator.user.tag} (${moderator.id})`,
+          reason,
+          metadata: { userId: user.id, moderatorId: moderator.id }
+        }
+      });
+
+      logger.info(`User snapped (2): ${user.tag} by ${moderator.user.tag}`);
+      return { caseId, user: user.tag, reason };
+    } catch (error) {
+      logger.error('Error snapping user (2):', error);
+      throw error;
+    }
+  }
+
+  static async unsnapUser({ guild, user, moderator, reason = 'No reason provided' }) {
+    try {
+      // TODO: Put the real "unsnap" action here
+
+      const caseId = await logModerationAction({
+        client: guild.client,
+        guild,
+        event: {
+          action: 'Member Unsnapped',
+          target: `${user.tag} (${user.id})`,
+          executor: `${moderator.user.tag} (${moderator.id})`,
+          reason,
+          metadata: { userId: user.id, moderatorId: moderator.id }
+        }
+      });
+
+      logger.info(`User unsnapped: ${user.tag} by ${moderator.user.tag}`);
+      return { caseId, user: user.tag, reason };
+    } catch (error) {
+      logger.error('Error unsnapping user:', error);
+      throw error;
+    }
+  }
+
+  static async unsnap2User({ guild, user, moderator, reason = 'No reason provided' }) {
+    try {
+      // TODO: Put the real "unsnap2" action here
+
+      const caseId = await logModerationAction({
+        client: guild.client,
+        guild,
+        event: {
+          action: 'Member Unsnapped (2)',
+          target: `${user.tag} (${user.id})`,
+          executor: `${moderator.user.tag} (${moderator.id})`,
+          reason,
+          metadata: { userId: user.id, moderatorId: moderator.id }
+        }
+      });
+
+      logger.info(`User unsnapped (2): ${user.tag} by ${moderator.user.tag}`);
+      return { caseId, user: user.tag, reason };
+    } catch (error) {
+      logger.error('Error unsnapping user (2):', error);
+      throw error;
+    }
+  }
+
+  // ==================== VANISH ====================
+  static async vanishUser({ guild, user, moderator, reason = 'No reason provided' }) {
+    try {
+      let targetMember = await guild.members.fetch(user.id).catch(() => null);
+      if (targetMember) {
+        this.assertModerationHierarchy(moderator, targetMember, 'vanish');
+      }
+
+      // TODO: Put the real "vanish" action here (hide user, remove roles, etc.)
+
+      const caseId = await logModerationAction({
+        client: guild.client,
+        guild,
+        event: {
+          action: 'Member Vanished',
+          target: `${user.tag} (${user.id})`,
+          executor: `${moderator.user.tag} (${moderator.id})`,
+          reason,
+          metadata: { userId: user.id, moderatorId: moderator.id }
+        }
+      });
+
+      logger.info(`User vanished: ${user.tag} by ${moderator.user.tag}`);
+      return { caseId, user: user.tag, reason };
+    } catch (error) {
+      logger.error('Error vanishing user:', error);
+      throw error;
+    }
+  }
+
+  static async unvanishUser({ guild, user, moderator, reason = 'No reason provided' }) {
+    try {
+      // TODO: Put the real "unvanish" action here
+
+      const caseId = await logModerationAction({
+        client: guild.client,
+        guild,
+        event: {
+          action: 'Member Unvanished',
+          target: `${user.tag} (${user.id})`,
+          executor: `${moderator.user.tag} (${moderator.id})`,
+          reason,
+          metadata: { userId: user.id, moderatorId: moderator.id }
+        }
+      });
+
+      logger.info(`User unvanished: ${user.tag} by ${moderator.user.tag}`);
+      return { caseId, user: user.tag, reason };
+    } catch (error) {
+      logger.error('Error unvanishing user:', error);
+      throw error;
+    }
+  }

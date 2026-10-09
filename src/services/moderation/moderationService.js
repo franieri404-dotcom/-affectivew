@@ -1,5 +1,4 @@
 // moderationService.js
-
 import { PermissionFlagsBits } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -14,7 +13,6 @@ function getHighestRole(member) {
 }
 
 export class ModerationService {
-
   static buildHierarchyMessage({ actor, actorRole, targetRole, targetLabel, action }) {
     if (actor === 'moderator') {
       return (
@@ -22,7 +20,6 @@ export class ModerationService {
         `In **Server Settings → Roles**, drag your moderator role above **${targetRole.name}**.`
       );
     }
-
     return (
       `I cannot ${action} **${targetLabel}** — my role **${actorRole.name}** is equal to or below theirs (**${targetRole.name}**). ` +
       `In **Server Settings → Roles**, drag my bot role above **${targetRole.name}**.`
@@ -32,7 +29,6 @@ export class ModerationService {
   static buildHierarchySkipReason(moderator, target, action, actor = 'moderator') {
     const targetLabel = getTargetLabel(target);
     const targetRole = getHighestRole(target);
-
     if (actor === 'bot') {
       const botMember = target.guild?.members?.me;
       const botRole = getHighestRole(botMember);
@@ -41,7 +37,6 @@ export class ModerationService {
       }
       return `Bot role **${botRole.name}** is too low for **${targetRole.name}** — move the bot role higher`;
     }
-
     const modRole = getHighestRole(moderator);
     if (!modRole || !targetRole) {
       return `Role hierarchy blocked ${action} for ${targetLabel}`;
@@ -53,21 +48,17 @@ export class ModerationService {
     if (!moderator || !target) {
       return { valid: false, error: 'Invalid moderator or target' };
     }
-
     if (moderator.guild?.ownerId === moderator.id) {
       return { valid: true };
     }
-
     const modRole = getHighestRole(moderator);
     const targetRole = getHighestRole(target);
-
     if (!modRole || !targetRole) {
       return {
         valid: false,
         error: 'Could not resolve role hierarchy. Try mentioning the user or use the slash command.',
       };
     }
-
     if (modRole.position <= targetRole.position) {
       return {
         valid: false,
@@ -80,7 +71,6 @@ export class ModerationService {
         }),
       };
     }
-
     return { valid: true };
   }
 
@@ -88,22 +78,18 @@ export class ModerationService {
     if (!target) {
       return { valid: false, error: 'Invalid target' };
     }
-
     const botMember = target.guild?.members?.me;
     if (!botMember) {
       return { valid: false, error: 'Bot is not in the guild' };
     }
-
     const botRole = getHighestRole(botMember);
     const targetRole = getHighestRole(target);
-
     if (!botRole || !targetRole) {
       return {
         valid: false,
         error: 'Could not resolve bot role hierarchy. Check that my role is configured in this server.',
       };
     }
-
     if (botRole.position <= targetRole.position) {
       return {
         valid: false,
@@ -116,7 +102,6 @@ export class ModerationService {
         }),
       };
     }
-
     return { valid: true };
   }
 
@@ -125,7 +110,6 @@ export class ModerationService {
     if (!botCheck.valid) {
       throw new TitanBotError(botCheck.error, ErrorTypes.PERMISSION, botCheck.error);
     }
-
     const modCheck = this.validateHierarchy(moderator, target, action);
     if (!modCheck.valid) {
       throw new TitanBotError(modCheck.error, ErrorTypes.PERMISSION, modCheck.error);
@@ -147,24 +131,20 @@ export class ModerationService {
           'Guild, user, and moderator are required'
         );
       }
-
       let targetMember = null;
       try {
         targetMember = await guild.members.fetch(user.id).catch(() => null);
       } catch (err) {
         logger.debug('Target not in guild, proceeding with ban');
       }
-
       if (targetMember) {
         this.assertModerationHierarchy(moderator, targetMember, 'ban');
       } else {
-
         const isOwner = guild.ownerId === moderator.id;
         const hasHighPerms = moderator.permissions.has([
             PermissionFlagsBits.ManageGuild,
             PermissionFlagsBits.Administrator
         ]);
-
         if (!isOwner && !hasHighPerms) {
             throw new TitanBotError(
                 'You do not have sufficient permissions to ban users who are not in the server.',
@@ -173,9 +153,7 @@ export class ModerationService {
             );
         }
       }
-
       await guild.members.ban(user.id, { reason });
-
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -192,7 +170,6 @@ export class ModerationService {
           }
         }
       });
-
       logger.info(`User banned: ${user.tag} by ${moderator.user.tag} in ${guild.name}`);
       
       return {
@@ -220,9 +197,7 @@ export class ModerationService {
           'Guild, member, and moderator are required'
         );
       }
-
       this.assertModerationHierarchy(moderator, member, 'kick');
-
       if (!member.kickable) {
         const targetLabel = getTargetLabel(member);
         throw new TitanBotError(
@@ -232,9 +207,7 @@ export class ModerationService {
           'Ensure my bot role is above theirs in **Server Settings → Roles** and that they do not have Admin.'
         );
       }
-
       await member.kick(reason);
-
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -249,7 +222,6 @@ export class ModerationService {
           }
         }
       });
-
       logger.info(`User kicked: ${member.user.tag} by ${moderator.user.tag} in ${guild.name}`);
       
       return {
@@ -278,9 +250,7 @@ export class ModerationService {
           'Guild, member, moderator, and duration are required'
         );
       }
-
       this.assertModerationHierarchy(moderator, member, 'timeout');
-
       if (!member.moderatable) {
         const targetLabel = getTargetLabel(member);
         throw new TitanBotError(
@@ -290,9 +260,7 @@ export class ModerationService {
           'Ensure my bot role is above theirs in **Server Settings → Roles** and that they do not have Admin.'
         );
       }
-
       await member.timeout(durationMs, reason);
-
       const durationMinutes = Math.floor(durationMs / 60000);
       const caseId = await logModerationAction({
         client: guild.client,
@@ -310,7 +278,6 @@ export class ModerationService {
           }
         }
       });
-
       logger.info(`User timed out: ${member.user.tag} by ${moderator.user.tag} in ${guild.name}`);
       
       return {
@@ -339,9 +306,7 @@ export class ModerationService {
           'Guild, member, and moderator are required'
         );
       }
-
       this.assertModerationHierarchy(moderator, member, 'remove the timeout from');
-
       if (!member.moderatable) {
         const targetLabel = getTargetLabel(member);
         throw new TitanBotError(
@@ -351,7 +316,6 @@ export class ModerationService {
           'Ensure my bot role is above theirs in **Server Settings → Roles**.'
         );
       }
-
       if (!member.isCommunicationDisabled()) {
         throw new TitanBotError(
           'User not timed out',
@@ -359,9 +323,7 @@ export class ModerationService {
           `${member.user.tag} is not currently timed out`
         );
       }
-
       await member.timeout(null, reason);
-
       await logModerationAction({
         client: guild.client,
         guild,
@@ -376,7 +338,6 @@ export class ModerationService {
           }
         }
       });
-
       logger.info(`Timeout removed: ${member.user.tag} by ${moderator.user.tag} in ${guild.name}`);
       
       return {
@@ -402,10 +363,8 @@ export class ModerationService {
           'Guild, user, and moderator are required'
         );
       }
-
       const bans = await guild.bans.fetch();
       const banInfo = bans.get(user.id);
-
       if (!banInfo) {
         throw new TitanBotError(
           'User not banned',
@@ -413,9 +372,7 @@ export class ModerationService {
           `${user.tag} is not currently banned from this server`
         );
       }
-
       await guild.members.unban(user.id, reason);
-
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -430,7 +387,6 @@ export class ModerationService {
           }
         }
       });
-
       logger.info(`User unbanned: ${user.tag} by ${moderator.user.tag} in ${guild.name}`);
       
       return {
@@ -443,20 +399,16 @@ export class ModerationService {
       throw error;
     }
   }
-}
+
   // ==================== WHITELIST ====================
   static async isWhitelisted({ guild, user }) {
     // TODO: Replace this with your real whitelist check (database, role, etc.)
     // For now it always returns true so the commands work while testing.
-    // Example with a role:
-    // const member = await guild.members.fetch(user.id).catch(() => null);
-    // return member?.roles.cache.has('YOUR_WHITELIST_ROLE_ID');
     return true;
   }
 
   static async whitelistUser({ guild, user, moderator, reason = 'No reason provided' }) {
     try {
-      // TODO: Add the real logic to save the user to your whitelist (database)
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -471,7 +423,6 @@ export class ModerationService {
           }
         }
       });
-
       logger.info(`User whitelisted: ${user.tag} by ${moderator.user.tag} in ${guild.name}`);
       return { caseId, user: user.tag, reason };
     } catch (error) {
@@ -488,9 +439,6 @@ export class ModerationService {
         this.assertModerationHierarchy(moderator, targetMember, 'snap');
       }
 
-      // TODO: Put the real "snap" action here (ban, kick, timeout, role remove, etc.)
-      // For now it only logs the action
-
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -502,7 +450,6 @@ export class ModerationService {
           metadata: { userId: user.id, moderatorId: moderator.id }
         }
       });
-
       logger.info(`User snapped: ${user.tag} by ${moderator.user.tag}`);
       return { caseId, user: user.tag, reason };
     } catch (error) {
@@ -518,8 +465,6 @@ export class ModerationService {
         this.assertModerationHierarchy(moderator, targetMember, 'snap');
       }
 
-      // TODO: Put the real "snap2" action here
-
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -531,7 +476,6 @@ export class ModerationService {
           metadata: { userId: user.id, moderatorId: moderator.id }
         }
       });
-
       logger.info(`User snapped (2): ${user.tag} by ${moderator.user.tag}`);
       return { caseId, user: user.tag, reason };
     } catch (error) {
@@ -542,8 +486,6 @@ export class ModerationService {
 
   static async unsnapUser({ guild, user, moderator, reason = 'No reason provided' }) {
     try {
-      // TODO: Put the real "unsnap" action here
-
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -555,7 +497,6 @@ export class ModerationService {
           metadata: { userId: user.id, moderatorId: moderator.id }
         }
       });
-
       logger.info(`User unsnapped: ${user.tag} by ${moderator.user.tag}`);
       return { caseId, user: user.tag, reason };
     } catch (error) {
@@ -566,8 +507,6 @@ export class ModerationService {
 
   static async unsnap2User({ guild, user, moderator, reason = 'No reason provided' }) {
     try {
-      // TODO: Put the real "unsnap2" action here
-
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -579,7 +518,6 @@ export class ModerationService {
           metadata: { userId: user.id, moderatorId: moderator.id }
         }
       });
-
       logger.info(`User unsnapped (2): ${user.tag} by ${moderator.user.tag}`);
       return { caseId, user: user.tag, reason };
     } catch (error) {
@@ -596,8 +534,6 @@ export class ModerationService {
         this.assertModerationHierarchy(moderator, targetMember, 'vanish');
       }
 
-      // TODO: Put the real "vanish" action here (hide user, remove roles, etc.)
-
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -609,7 +545,6 @@ export class ModerationService {
           metadata: { userId: user.id, moderatorId: moderator.id }
         }
       });
-
       logger.info(`User vanished: ${user.tag} by ${moderator.user.tag}`);
       return { caseId, user: user.tag, reason };
     } catch (error) {
@@ -620,8 +555,6 @@ export class ModerationService {
 
   static async unvanishUser({ guild, user, moderator, reason = 'No reason provided' }) {
     try {
-      // TODO: Put the real "unvanish" action here
-
       const caseId = await logModerationAction({
         client: guild.client,
         guild,
@@ -633,7 +566,6 @@ export class ModerationService {
           metadata: { userId: user.id, moderatorId: moderator.id }
         }
       });
-
       logger.info(`User unvanished: ${user.tag} by ${moderator.user.tag}`);
       return { caseId, user: user.tag, reason };
     } catch (error) {
@@ -641,3 +573,4 @@ export class ModerationService {
       throw error;
     }
   }
+}

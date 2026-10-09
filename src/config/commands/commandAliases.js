@@ -137,3 +137,16 @@ export function resolveSubcommandAlias(subcommandName) {
     const normalized = subcommandName.toLowerCase();
     return subcommandAliases[normalized] || subcommandName;
 }
+// Check if the user is whitelisted
+const isWhitelisted = await ModerationService.isWhitelisted({
+    guild: interaction.guild,
+    user: interaction.user,
+});
+
+if (!isWhitelisted) {
+    throw new TitanBotError(
+        'Not whitelisted',
+        ErrorTypes.PERMISSION,
+        'You must be whitelisted to use this command.',
+    );
+}
